@@ -1,0 +1,2 @@
+// Lists
+db.school.find()
