@@ -19,7 +19,7 @@ def log_stats():
     print("Methods:")
     for m in ["GET", "POST", "PUT", "PATCH", "DELETE"]:
         c = collection.count_documents({"method": m})
-        print(f"\tmethod {m}: {c}")
+        print(f"    method {m}: {c}")  # 4 spaces
 
     status = collection.count_documents({"method": "GET", "path": "/status"})
     print(f"{status} status check")
@@ -27,4 +27,3 @@ def log_stats():
 
 if __name__ == "__main__":
     log_stats()
-
