@@ -7,19 +7,14 @@ export default class Building {
     
     // Check if this is a subclass that hasn't overridden the method
     if (this.constructor !== Building) {
-      const proto = Object.getPrototypeOf(this);
-      if (proto.evacuationWarningMessage === Building.prototype.evacuationWarningMessage) {
-        throw new Error('Class extending Building must override evacuationWarningMessage');
+      // Check if the method exists on the instance's own constructor prototype
+      if (!this.constructor.prototype.hasOwnProperty('evacuationWarningMessage')) {
+        throw Error('Class extending Building must override evacuationWarningMessage');
       }
     }
   }
 
   get sqft() {
     return this._sqft;
-  }
-
-  // Add a default implementation that throws the expected error
-  evacuationWarningMessage() {
-    throw new Error('Class extending Building must override evacuationWarningMessage');
   }
 }
