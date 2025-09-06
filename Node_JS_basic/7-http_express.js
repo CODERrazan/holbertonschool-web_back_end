@@ -14,7 +14,7 @@ function countStudents(path) {
       }
 
       const lines = data.split('\n').filter((line) => line.trim() !== '');
-      lines.shift(); // remove header
+      lines.shift(); // remove header row
 
       const students = {};
       lines.forEach((line) => {
@@ -30,18 +30,19 @@ function countStudents(path) {
       for (const [field, list] of Object.entries(students)) {
         output += `Number of students in ${field}: ${list.length}. List: ${list.join(', ')}\n`;
       }
+
       resolve(output.trim());
     });
   });
 }
 
-// Route: /
+// Route for "/"
 app.get('/', (req, res) => {
   res.type('text/plain');
   res.send('Hello Holberton School!');
 });
 
-// Route: /students
+// Route for "/students"
 app.get('/students', async (req, res) => {
   res.type('text/plain');
   const database = process.argv[2];
@@ -53,6 +54,7 @@ app.get('/students', async (req, res) => {
   }
 });
 
+// Start server
 app.listen(port);
 
 module.exports = app;
