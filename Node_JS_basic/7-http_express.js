@@ -1,65 +1,62 @@
+// 7-http_express.js
 const express = require('express');
-const fs = require('fs').promises;
+const fs = require('fs');
 
 const app = express();
 const port = 1245;
 
-async function countStudents(path) {
-  try {
-    const data = await fs.readFile(path, 'utf-8');
-    const rows = data.split('\n').filter((row) => row.trim() !== '');
-
-    const students = rows.slice(1);
-
-    let result = `Number of students: ${students.length}\n`;
-    console.log(`Number of students: ${students.length}`);
-
-    const fields = {};
-
-    for (const student of students) {
-      const records = student.split(',');
-      const field = records[records.length - 1].trim();
-      const firstname = records[0].trim();
-
-      if (!fields[field]) {
-        fields[field] = [];
+function countStudents(path) {
+  return new Promise((resolve, reject) => {
+    fs.readFile(path, 'utf8', (err, data) => {
+      if (err) {
+        reject(new Error('Cannot load the database'));
+        return;
       }
-      fields[field].push(firstname);
-    }
 
-    for (const [field, list] of Object.entries(fields)) {
-      console.log(`Number of students in ${field}: ${fields[field].length}. List: ${list.join(', ')}`);
-      result += `Number of students in ${field}: ${fields[field].length}. List: ${list.join(', ')}\n`;
-    }
-    return result.trim();
-  } catch (error) {
-    throw new Error('Cannot load the database');
-  }
+      const lines = data.split('\n').filter((line) => line.trim() !== '');
+      lines.shift(); // remove header row
+
+      const studentsByField = {};
+      const order = [];
+
+      lines.forEach((line) => {
+        const [firstname, , , field] = line.split(',');
+        if (field) {
+          if (!studentsByField[field]) {
+            studentsByField[field] = [];
+            order.push(field); // preserve insertion order
+          }
+          studentsByField[field].push(firstname);
+        }
+      });
+
+      let report = `Number of students: ${lines.length}\n`;
+      for (const field of order) {
+        const list = studentsByField[field];
+        report += `Number of students in ${field}: ${list.length}. List: ${list.join(', ')}\n`;
+      }
+
+      resolve(report.trimEnd()); // avoid extra trailing newline
+    });
+  });
 }
 
-app.get('/', (_, res) => {
+app.get('/', (req, res) => {
+  res.type('text/plain');
   res.send('Hello Holberton School!');
 });
 
 app.get('/students', async (req, res) => {
-  const databaseFile = process.argv[2];
-
-  if (!databaseFile) {
-    res.status(404).send('Error: No database file provided');
-    return;
-  }
-
+  res.type('text/plain');
+  const database = process.argv[2];
   try {
-    const result = await countStudents(databaseFile);
-    res.write('This is the list of our students\n');
-    res.end(result);
-  } catch (error) {
-    res.status(404).send('This is the list of our students\nCannot load the database');
+    const report = await countStudents(database);
+    res.send(`This is the list of our students\n${report}`);
+  } catch (err) {
+    res.send('This is the list of our students\nCannot load the database');
   }
 });
 
-app.listen(port, () => {
-  console.log(`Server is listening in port ${port}`);
-});
+app.listen(port);
 
 module.exports = app;
